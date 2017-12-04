@@ -8,9 +8,10 @@ from contextlib import redirect_stdout
 import itertools
 import random
 import time
+from functools import wraps
 
 
-class JungleProfiler(object):
+class JungleController(object):
 
     def __init__(self,reps=2,comb=True,tlim=5,**kwargs):
         '''
@@ -70,9 +71,8 @@ class JungleProfiler(object):
         self.test_seq = self.make_test_sequence()
         self.run_dict = {}
 
-
-
-        def wrapped_f(*args):
+        @wraps(f)
+        def junglecontroller_wrapped_f(*args):
             ''' Called when decorated function is called '''
             for i,kwarg_dict in enumerate(self.test_seq):
                 # strip out rep kwarg
@@ -81,13 +81,21 @@ class JungleProfiler(object):
                     'kwargs' : kwarg_dict,
                     'start' : time.time(),
                     'stdout' : None,
-                    'error' : None
+                    'error' : None,
+                    'profile' : None
                 }
                 try:
                     # Start memory and time profiling
                     sio = io.StringIO()
                     with redirect_stdout(sio):
-                        f(**kwarg_dict)
+                        returned_items = f(**kwarg_dict) # If decorated function contains
+
+                        # Get the first Profile instance found, if there is one
+                        for item in returned_items:
+                            if isinstance(item,Profile):
+                                run['profile'] = item
+                                break
+
                     run['stdout'] = sio.getvalue()
                     # End memory and time profiling
                 except Exception as e:
@@ -97,7 +105,7 @@ class JungleProfiler(object):
                 self.run_dict[i] = run
             return self
 
-        return wrapped_f
+        return junglecontroller_wrapped_f
 
     def __str__(self):
         s = 'JungleProfiler'
@@ -130,34 +138,100 @@ class JungleProfiler(object):
         pass
 
 
+class JungleProfiler(object):
 
-@JungleProfiler(a=[10,100],b=[20,200],c=[30,300])
+    def __init__(self,memory=True,**kwargs):
+        self.memory = memory
+        self.kwargs = kwargs
+        pass
+
+    def __call__(self, f):
+
+        @wraps(f)
+        def jungleprofiler_wrapped_f(*args,**kwargs):
+            freturn = f(**kwargs)
+            prof = Profile()
+            return prof,freturn
+
+        return jungleprofiler_wrapped_f
+
+    def __str__(self):
+        return ''
+
+class Profile(object):
+
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return 'This is a Profile Object!'
+
+
+
+
+
+@JungleController(a=[10,100],b=[20],c=[30])
 def simple_func(a=1,b=2,c=3):
-    '''
-    Dummy Function used to test simple functions
-    '''
+    ''' Dummy Function used with Jungle Controller with Kwargs and NO JungleProfiler '''
     print('A:%d\tB:%d\tC:%d'%(a,b,c))
+    return 'something', 'another something'
 
-
-@JungleProfiler()
+@JungleController()
 def simple_func2(a=1,b=2,c=3):
-    '''
-    Dummy Function used to test simple functions
-    '''
+    ''' Dummy Function used with Jungle Controller without Kwargs and NO JungleProfiler '''
     print('A:%d\tB:%d\tC:%d'%(a,b,c))
+    return 'something', 'another something'
+
+@JungleController(a=[10,100],b=[20],c=[30])
+@JungleProfiler()
+def simple_func3(a=1,b=2,c=3):
+    ''' Dummy Function used with Jungle Controller with Kwargs and JungleProfiler '''
+    print('A:%d\tB:%d\tC:%d'%(a,b,c))
+    return 'something', 'another something'
+
+@JungleController()
+@JungleProfiler()
+def simple_func4(a=1,b=2,c=3):
+    ''' Dummy Function used with Jungle Controller without Kwargs but with JungleProfiler '''
+    print('A:%d\tB:%d\tC:%d'%(a,b,c))
+    return 'something', 'another something'
+
+@JungleController(a=[10,100],b=[20],c=[30])
+def func_with_setup_and_teardown(a=1,b=2,c=3):
+    ''' Dummy Function used with Jungle Controller with Kwargs and JungleProfiler around only part of the function'''
+    print("OUTSIDE PROFILED REGION: Setup")
+    @JungleProfiler()
+    def inner_func(a=1,b=2,c=3):
+        print('INSIDE PROFILED REGION:\tA:%d\tB:%d\tC:%d' % (a, b, c))
+        return 'inner something'
+    stuff = inner_func(a=a,b=b,c=c)
+    print("OUTSIDE PROFILED REGION: Teardown")
+    return 'something', 'another something', stuff
+
+
+
+
+def test_func(f):
+    print('\n------- %s -------'%f.__name__)
+    print('Docs: %s' % f.__doc__)
+    jp = f()
+    for d in jp.run_dict:
+        print('Run #%d -> %s'%(d,jp.run_dict[d]))
+        print('Error: %s' % jp.run_dict[d]['error'])
+        print('Profile: %s' % jp.run_dict[d]['profile'])
+        print('StdOut: %s'%jp.run_dict[d]['stdout'])
+
+
+
 
 if __name__ == '__main__':
-    print('\n---simple func ---')
-    jp = simple_func()
-    for d in jp.run_dict:
-        print(d,jp.run_dict[d])
-        print(jp.run_dict[d]['stdout'])
+    test_func(simple_func)
+    test_func(simple_func2)
+    test_func(simple_func3)
+    test_func(simple_func4)
+    test_func(func_with_setup_and_teardown)
 
-    print('\n---simple func 2 ---')
-    jp = simple_func2()
-    for d in jp.run_dict:
-        print(d, jp.run_dict[d])
-        print(jp.run_dict[d]['stdout'])
+
 
 
 
