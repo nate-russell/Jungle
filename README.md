@@ -3,7 +3,7 @@ The Python Playground. A place to practice the ins and outs of python, software 
 
 # TODO
 1. Figure out how to handle the occlusion of test case init cost from the decorator based profiler
-2. How to specify test dimensions through decorator **kwargs
+2. How to specify test dimensions through decorator **kwargs DONE
 3. How best to handle special metrics (not total time and peak net ram)
 4. How to limit decorator to fixed time allowances
 
