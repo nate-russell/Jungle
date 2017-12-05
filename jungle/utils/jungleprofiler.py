@@ -10,6 +10,34 @@ import random
 import time
 from functools import wraps
 
+class persistent_locals(object):
+
+    def __init__(self, func):
+        self._locals = {}
+        self.func = func
+
+
+    def __call__(self, *args, **kwargs):
+        def tracer(frame, event, arg):
+            if event=='return':
+                self._locals = frame.f_locals.copy()
+
+        # tracer is activated on next call, return or exception
+        sys.setprofile(tracer)
+        try:
+            # trace the function call
+            res = self.func(*args, **kwargs)
+        finally:
+            # disable tracer and replace with old one
+            sys.setprofile(None)
+        return res
+
+    def clear_locals(self):
+        self._locals = {}
+
+    @property
+    def locals(self):
+        return self._locals
 
 class JungleController(object):
 
@@ -64,12 +92,16 @@ class JungleController(object):
 
     def __call__(self, f):
         """ decorator wrapper """
-        lines = inspect.getsourcelines(f)
-        self.source_code = "".join(lines[0])
-        self.source_file = inspect.getsourcefile(f)
+        #lines = inspect.getsourcelines(f)
+        #self.source_code = "".join(lines[0])
+        #self.source_file = inspect.getsourcefile(f)
         self.f_docs = f.__doc__
         self.test_seq = self.make_test_sequence()
         self.run_dict = {}
+
+        def tracer(frame, event, arg):
+            if event == 'return':
+                self._locals = frame.f_locals.copy()
 
         @wraps(f)
         def junglecontroller_wrapped_f(*args):
@@ -84,17 +116,30 @@ class JungleController(object):
                     'error' : None,
                     'profile' : None
                 }
+
                 try:
                     # Start memory and time profiling
                     sio = io.StringIO()
                     with redirect_stdout(sio):
-                        returned_items = f(**kwarg_dict) # If decorated function contains
+                        # Call the decorated function with the kwarg_dict provided by controller
+                        f(**kwarg_dict)
 
-                        # Get the first Profile instance found, if there is one
-                        for item in returned_items:
-                            if isinstance(item,Profile):
-                                run['profile'] = item
+                        for local in f.locals:
+                            obj = f.locals[local]
+                            #print('\nLocal: %s\tObject:%s'%(local,f.locals[local]))
+                            if isinstance(obj, Profile):
+                                run['profile'] = obj
                                 break
+                            else:
+                                try:
+                                    #for item in itertools.chain.from_iterable(obj):
+                                    for item in obj:
+                                        if isinstance(item,Profile):
+                                            run['profile'] = item
+                                            break
+                                except TypeError:
+                                    pass
+                                    #print('Not Iterable... type = %s'%type(obj))
 
                     run['stdout'] = sio.getvalue()
                     # End memory and time profiling
@@ -150,8 +195,8 @@ class JungleProfiler(object):
         @wraps(f)
         def jungleprofiler_wrapped_f(*args,**kwargs):
             freturn = f(**kwargs)
-            prof = Profile()
-            return prof,freturn
+            self.prof = Profile()
+            return freturn, self.prof
 
         return jungleprofiler_wrapped_f
 
@@ -197,16 +242,18 @@ def simple_func4(a=1,b=2,c=3):
     return 'something', 'another something'
 
 @JungleController(a=[10,100],b=[20],c=[30])
+@persistent_locals
 def func_with_setup_and_teardown(a=1,b=2,c=3):
     ''' Dummy Function used with Jungle Controller with Kwargs and JungleProfiler around only part of the function'''
     print("OUTSIDE PROFILED REGION: Setup")
+
     @JungleProfiler()
     def inner_func(a=1,b=2,c=3):
         print('INSIDE PROFILED REGION:\tA:%d\tB:%d\tC:%d' % (a, b, c))
         return 'inner something'
-    stuff = inner_func(a=a,b=b,c=c)
+    inner_func_return = inner_func(a=a,b=b,c=c)
     print("OUTSIDE PROFILED REGION: Teardown")
-    return 'something', 'another something', stuff
+    return 'something', 'another something'
 
 
 
@@ -222,13 +269,15 @@ def test_func(f):
         print('StdOut: %s'%jp.run_dict[d]['stdout'])
 
 
-
-
 if __name__ == '__main__':
-    test_func(simple_func)
-    test_func(simple_func2)
-    test_func(simple_func3)
-    test_func(simple_func4)
+
+
+
+
+    #test_func(simple_func)
+    #test_func(simple_func2)
+    #test_func(simple_func3)
+    #test_func(simple_func4)
     test_func(func_with_setup_and_teardown)
 
 
