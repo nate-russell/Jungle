@@ -92,6 +92,7 @@ class JungleController(object):
 
     def __call__(self, f):
         """ decorator wrapper """
+        f = persistent_locals(f)
         #lines = inspect.getsourcelines(f)
         #self.source_code = "".join(lines[0])
         #self.source_file = inspect.getsourcefile(f)
@@ -122,6 +123,7 @@ class JungleController(object):
                     sio = io.StringIO()
                     with redirect_stdout(sio):
                         # Call the decorated function with the kwarg_dict provided by controller
+
                         f(**kwarg_dict)
 
                         for local in f.locals:
@@ -241,8 +243,10 @@ def simple_func4(a=1,b=2,c=3):
     print('A:%d\tB:%d\tC:%d'%(a,b,c))
     return 'something', 'another something'
 
-@JungleController(a=[10,100],b=[20],c=[30])
-@persistent_locals
+
+
+
+@JungleController(a=[10,100],b=[20,20],c=[30,30])
 def func_with_setup_and_teardown(a=1,b=2,c=3):
     ''' Dummy Function used with Jungle Controller with Kwargs and JungleProfiler around only part of the function'''
     print("OUTSIDE PROFILED REGION: Setup")
@@ -251,6 +255,7 @@ def func_with_setup_and_teardown(a=1,b=2,c=3):
     def inner_func(a=1,b=2,c=3):
         print('INSIDE PROFILED REGION:\tA:%d\tB:%d\tC:%d' % (a, b, c))
         return 'inner something'
+
     inner_func_return = inner_func(a=a,b=b,c=c)
     print("OUTSIDE PROFILED REGION: Teardown")
     return 'something', 'another something'
@@ -266,14 +271,10 @@ def test_func(f):
         print('Run #%d -> %s'%(d,jp.run_dict[d]))
         print('Error: %s' % jp.run_dict[d]['error'])
         print('Profile: %s' % jp.run_dict[d]['profile'])
-        print('StdOut: %s'%jp.run_dict[d]['stdout'])
+        print('StdOut: \n%s'%jp.run_dict[d]['stdout'])
 
 
 if __name__ == '__main__':
-
-
-
-
     #test_func(simple_func)
     #test_func(simple_func2)
     #test_func(simple_func3)
