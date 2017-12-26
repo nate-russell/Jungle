@@ -1,41 +1,55 @@
-from jungle.utils.jungleprofiler import JungleController, JungleProfiler
+'''
+Sorting Examples for showcasing and developing Jungle features
+'''
+from jungle import JungleController, JungleProfiler
 import numpy as np
 
 class Sorting_Prototype:
 
-
-    def sort(self, l):
-        ''' Sort L '''
+    def __init__(self):
         pass
 
-    def test_correctness(self):
-        ''' Simple test case to make sure '''
+    def sort(self):
         pass
-
 
     @JungleController(n=[10,20,30])
     def test_sort_n(self,n=100):
         ''' Test sorting an iterable of size n with a random distribution '''
-        print('OUTSIDE: Setting Up list to Sort')
+        # make data to sort with random distribution
         list_2_sort = list(np.random.randn(n))
 
-        @JungleProfiler
+        @JungleProfiler()
         def sort_n(l):
-            print('INSIDE: Sorting List')
-            return l
+            sorted_list = self.sort(l)
+            return sorted_list
+
+        # Sort and check sort status
+        sorted_list,_ = sort_n(list_2_sort)
+        sort_status = all(sorted_list[i] <= sorted_list[i+1] for i in range(len(sorted_list)-1))
+        return sort_status
+
+class NP_QuickSort(Sorting_Prototype):
+
+    def sort(self,l):
+        return np.sort(l,kind='quicksort')
+
+class NP_MergeSort(Sorting_Prototype):
+
+    def sort(self,l):
+        return np.sort(l,kind='mergesort')
+
+class NP_HeapSort(Sorting_Prototype):
+
+    def sort(self,l):
+        return np.sort(l,kind='heapsort')
 
 
 
-        print('OUTSIDE: Checking correctness of sort')
+if __name__ == '__main__':
 
-
-class MySorter(Sorting_Prototype):
-
-
-
-
-
-
+    m = NP_QuickSort()
+    jc = m.test_sort_n()
+    print(jc)
 
 
 
