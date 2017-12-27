@@ -28,6 +28,12 @@ class Sorting_Prototype:
         sort_status = all(sorted_list[i] <= sorted_list[i+1] for i in range(len(sorted_list)-1))
         return sort_status
 
+    @JungleController()
+    @JungleProfiler()
+    def test_nonrandom_sort(self):
+        pass
+
+
 class NP_QuickSort(Sorting_Prototype):
 
     def sort(self,l):
