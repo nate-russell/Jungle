@@ -18,7 +18,7 @@ class TestTreeAutomation:
     ''' Automation Code for discovering test functions used in conjunction with JungleController '''
 
     def __init__(self):
-        directory = '../code'
+        directory = 'code'
         self.json_mod_log = 'content_mod_log.json'
         self.file_dict_path = 'test_tree.json'
 

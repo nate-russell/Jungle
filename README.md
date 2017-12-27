@@ -12,8 +12,7 @@ The Python Playground. A place to practice the ins and outs of python, software 
 * Consolidation of profiling metrics across classes that inherit the same prototype test case
 * README.md to include example of evaluation and reporting automation based on basic sorting methods
 * Develop Web Frontend for viewing benchmarking results interactively on github pages (Big Project)
-
-
+* Add basic MANOVA to full factorial tests with temporal autocorrelation.
 
 # How it works
 There are 2 halves of this repo. In the util directory, there are classes for profiling, testing and reporting. These enable the automation of **evaluation** and **reporting** for classes found in the code directory. The code directory has classes and tests for implementations of data structures, algorithms, design patterns, etc.

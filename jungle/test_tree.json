@@ -1,1 +1,16 @@
-{}
+{
+   "code.sorting": {
+      "Sorting_Prototype": {
+         "test_nonrandom_sort": {
+            "NP_HeapSort": "yo yo yo",
+            "NP_MergeSort": "yo yo yo",
+            "NP_QuickSort": "yo yo yo"
+         },
+         "test_sort_n": {
+            "NP_HeapSort": "yo yo yo",
+            "NP_MergeSort": "yo yo yo",
+            "NP_QuickSort": "yo yo yo"
+         }
+      }
+   }
+}
