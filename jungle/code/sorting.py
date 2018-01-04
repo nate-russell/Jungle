@@ -1,21 +1,22 @@
 '''
 Sorting Examples for showcasing and developing Jungle features
 '''
-from jungle import JungleController, JungleProfiler
+import inspect
+from jungle import JungleExperiment, JungleProfiler
 import numpy as np
+print('Finished Loading Modules')
+
+
+
+
 
 class Sorting_Prototype:
 
-    def __init__(self):
-        pass
-
-    def sort(self):
-        pass
-
-    @JungleController(n=[10,20,30])
-    def test_sort_n(self,n=100):
+    @JungleExperiment(reps=1,n=[100,500,1000])
+    def test_sort_n(self,n=100,seed=1234):
         ''' Test sorting an iterable of size n with a random distribution '''
         # make data to sort with random distribution
+        np.random.seed(seed)
         list_2_sort = list(np.random.randn(n))
 
         @JungleProfiler()
@@ -27,12 +28,6 @@ class Sorting_Prototype:
         sorted_list,_ = sort_n(list_2_sort)
         sort_status = all(sorted_list[i] <= sorted_list[i+1] for i in range(len(sorted_list)-1))
         return sort_status
-
-    @JungleController()
-    @JungleProfiler()
-    def test_nonrandom_sort(self):
-        pass
-
 
 class NP_QuickSort(Sorting_Prototype):
 
@@ -53,9 +48,17 @@ class NP_HeapSort(Sorting_Prototype):
 
 if __name__ == '__main__':
 
-    m = NP_QuickSort()
-    jc = m.test_sort_n()
-    print(jc)
+    print('\n__main__\n')
+
+    print('Starting Call #1')
+    m1 = NP_QuickSort()
+    jc1 = m1.test_sort_n()
+
+    print('\nStarting Call #2')
+    m2 = NP_MergeSort()
+    jc2 = m2.test_sort_n()
+
+
 
 
 

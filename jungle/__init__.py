@@ -1,1 +1,1 @@
-from jungle.utils.jungleprofiler import JungleController, JungleProfiler
+from jungle.utils.jungleprofiler import JungleExperiment, JungleProfiler

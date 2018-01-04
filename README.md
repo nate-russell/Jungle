@@ -14,6 +14,11 @@ The Python Playground. A place to practice the ins and outs of python, software 
 * Develop Web Frontend for viewing benchmarking results interactively on github pages (Big Project)
 * Add basic MANOVA to full factorial tests with temporal autocorrelation.
 
+#### Warnings
+* Any test cases that involve randomization should have controllable seeds. If you don't have fixed seeds then PRNG might be responsible for variability in results in addition to runtime environments.
+* Might be more, ill keep looking for shortcomings
+
+
 # How it works
 There are 2 halves of this repo. In the util directory, there are classes for profiling, testing and reporting. These enable the automation of **evaluation** and **reporting** for classes found in the code directory. The code directory has classes and tests for implementations of data structures, algorithms, design patterns, etc.
 
