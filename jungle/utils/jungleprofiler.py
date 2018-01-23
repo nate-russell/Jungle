@@ -103,7 +103,6 @@ class DelayedDecorator(object):
         return deco
 
 
-
 def get_class_that_defined_method(meth):
     if inspect.ismethod(meth):
         print('method')
@@ -187,7 +186,7 @@ class JungleExperiment(object):
         Called before decorated function is read
         :param reps:
         '''
-        print('Jungle Controller Initialized')
+        print('%s.__init__ called' % self.__class__.__name__)
         self.kwargs = kwargs  # These will be used to generate testing
         self.reps = reps
         self.comb = comb
@@ -205,36 +204,9 @@ class JungleExperiment(object):
         self.vm = psutil.virtual_memory()
         self.cpu = psutil.cpu_stats()
 
-    def make_test_sequence(self):
-        '''
-        Convert kwargs into
-        :return: iterable of kwargs dicts
-        '''
-        # Make sure rep arg isn't in kwargs
-        if 'rep' in self.kwargs:
-            raise ValueError('JungleProfiler received a kwarg named \'rep\'.'
-                             ' This arg is used by JungleProfiler already. ')
-        else:
-            self.kwargs['rep'] = list(range(self.reps))
-        # Make sure each arg in kwargs is a list
-        for arg in self.kwargs:
-            if not isinstance(self.kwargs[arg], list):
-                raise ValueError('kwarg: %s provided to JungleProfiler is of'
-                                 ' type %s and should be a list' % (arg, type(self.kwargs[arg])))
-
-        # All Combinations
-        arg_names = sorted(self.kwargs)
-        test_tuples = itertools.product(*(self.kwargs[arg] for arg in arg_names))
-        test_seq = [{arg_names[i]: val for i, val in enumerate(tt)} for tt in test_tuples]
-        # todo add alternatives to all combinations
-
-        # Shuffle to mitigate temporal confounding factors
-        random.shuffle(test_seq)
-        return test_seq
-
     def __call__(self, f, *args, **kwargs):
         """ decorator wrapper """
-        print('Jungle Controller Called')
+        print('%s.__call__ called' % self.__class__.__name__)
         lines = inspect.getsourcelines(f)
         self.source_code = "".join(lines[0])
         self.source_file = inspect.getsourcefile(f)
@@ -302,6 +274,48 @@ class JungleExperiment(object):
 
         return junglecontroller_wrapped_f
 
+    def __str__(self):
+        s = 'JungleProfiler'
+        s += '\n\nPython Version: %s' % self.python_version
+        s += '\n\nMachine Specs:\n%s' % self.platform_specs
+        s += '\n\nSource File:\n%s' % self.source_file
+        s += '\n\nSource Code:\n%s' % self.source_code
+        s += '\n\nDocumentation:\n%s' % self.f_docs
+        s += '\n\nRuns:'
+        for (k, v) in self.run_dict.items():
+            s += '\n\t%d: %s' % (k, v)
+        # s += '\n\nCaptured StdOut:\n%s' % self.f_stdout
+        # todo timing
+        # todo memory
+        return s
+
+    def make_test_sequence(self):
+        '''
+        Convert kwargs into
+        :return: iterable of kwargs dicts
+        '''
+        # Make sure rep arg isn't in kwargs
+        if 'rep' in self.kwargs:
+            raise ValueError('JungleProfiler received a kwarg named \'rep\'.'
+                             ' This arg is used by JungleProfiler already. ')
+        else:
+            self.kwargs['rep'] = list(range(self.reps))
+        # Make sure each arg in kwargs is a list
+        for arg in self.kwargs:
+            if not isinstance(self.kwargs[arg], list):
+                raise ValueError('kwarg: %s provided to JungleProfiler is of'
+                                 ' type %s and should be a list' % (arg, type(self.kwargs[arg])))
+
+        # All Combinations
+        arg_names = sorted(self.kwargs)
+        test_tuples = itertools.product(*(self.kwargs[arg] for arg in arg_names))
+        test_seq = [{arg_names[i]: val for i, val in enumerate(tt)} for tt in test_tuples]
+        # todo add alternatives to all combinations
+
+        # Shuffle to mitigate temporal confounding factors
+        random.shuffle(test_seq)
+        return test_seq
+
     def postprocess_runs(self):
         ''' Convert Run Dict into pandas df'''
         self.controller_dict = defaultdict(list)
@@ -320,21 +334,6 @@ class JungleExperiment(object):
 
         self.controller_df = pd.DataFrame(self.controller_dict)
         self.controller_df.set_index('index')
-
-    def __str__(self):
-        s = 'JungleProfiler'
-        s += '\n\nPython Version: %s' % self.python_version
-        s += '\n\nMachine Specs:\n%s' % self.platform_specs
-        s += '\n\nSource File:\n%s' % self.source_file
-        s += '\n\nSource Code:\n%s' % self.source_code
-        s += '\n\nDocumentation:\n%s' % self.f_docs
-        s += '\n\nRuns:'
-        for (k, v) in self.run_dict.items():
-            s += '\n\t%d: %s' % (k, v)
-        # s += '\n\nCaptured StdOut:\n%s' % self.f_stdout
-        # todo timing
-        # todo memory
-        return s
 
     def analyze_rundict(self):
         # todo test for statistical trends in data, including run order
@@ -357,12 +356,11 @@ class JungleExperiment(object):
         pass
 
 
-
 class JungleProfiler(object):
     """ Decorator class for profiling a function or method """
 
     def __init__(self, m_prof=True, t_prof=True, other_funcs=None, **kwargs):
-        print('\nJungle Profiler Initialized')
+        print('%s.__init__ called' % self.__class__.__name__)
         self.other_funcs = other_funcs
         self.m_prof = m_prof
         self.t_prof = t_prof
@@ -370,7 +368,7 @@ class JungleProfiler(object):
         pass
 
     def __call__(self, f):
-        # Get functions parents
+        print('%s.__call__ called' % self.__class__.__name__)
         print('Function Name: %s' % f.__name__)
         print('Is Function: %s' % inspect.isfunction(f))
         print('Is Method: %s' % inspect.ismethod(f))

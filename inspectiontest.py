@@ -29,6 +29,26 @@ class Child(Parent):
         return c
 
 
+class 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == '__main__':
     child = Child()
     test_func = child.parent_test
